@@ -5,27 +5,6 @@
 #include <vector>
 #include <string>
 
-// All the types able to be combined with the + operator
-#define COMBO_STATS					\
-	{"LIFE", STAT_MAXHP},			\
-	{"MANA", STAT_MAXMANA},			\
-	{"STR", STAT_STRENGTH},			\
-	{"DEX", STAT_DEXTERITY},		\
-	{"CRES", STAT_COLDRESIST},		\
-	{"FRES", STAT_FIRERESIST},		\
-	{"LRES", STAT_LIGHTNINGRESIST},	\
-	{"PRES", STAT_POISONRESIST},	\
-	{"MINDMG", STAT_MINIMUMDAMAGE},	\
-	{"MAXDMG", STAT_MAXIMUMDAMAGE}, \
-	{"EDEF", STAT_ENHANCEDDEFENSE},	\
-	{"EDAM", STAT_ENHANCEDMAXIMUMDAMAGE}, \
-	{"FCR", STAT_FASTERCAST},		\
-	{"AR", STAT_ATTACKRATING},		\
-	{"STAT3", STAT_VITALITY},		\
-	{"STAT60", STAT_LIFELEECH},		\
-	{"STAT62", STAT_MANALEECH},		\
-	{"REPLIFE", STAT_REPLENISHLIFE},
-
 #define MAP_COLOR_WHITE     0x20
 
 // All colors here must also be defined in ReplacementMap
@@ -680,8 +659,34 @@ std::map<std::string, FilterCondition> condition_map =
 
 };
 
-SkillReplace skills[] = {
-	COMBO_STATS
+struct SkillReplace {
+	DWORD id;
+	DWORD params;
+
+	SkillReplace(DWORD id, DWORD params) :
+		id(id),
+		params(params) {}
+};
+
+// case-sensitive searches for AddCondition
+const unordered_map<string, const SkillReplace> skills = {
+	{{"LIFE"}, { STAT_MAXHP, 0}},
+	{{"MANA"}, { STAT_MAXMANA, 0}},
+	{{"STR"}, { STAT_STRENGTH, 0}},
+	{{"DEX"}, { STAT_DEXTERITY, 0}},
+	{{"CRES"}, { STAT_COLDRESIST, 0}},
+	{{"FRES"}, { STAT_FIRERESIST, 0}},
+	{{"LRES"}, { STAT_LIGHTNINGRESIST, 0}},
+	{{"PRES"}, { STAT_POISONRESIST, 0}},
+	{{"MINDMG"}, { STAT_MINIMUMDAMAGE, 0}},
+	{{"MAXDMG"}, { STAT_MAXIMUMDAMAGE, 0}},
+	{{"EDEF"}, { STAT_ENHANCEDDEFENSE, 0}},
+	{{"EDAM"}, { STAT_ENHANCEDMAXIMUMDAMAGE, 0}},
+	{{"FCR"}, { STAT_FASTERCAST, 0}},
+	{{"AR"}, { STAT_ATTACKRATING, 0}},
+	{{"REPLIFE"}, { STAT_REPLENISHLIFE, 0}},
+	{{"STAT"}, { ~0UL, 1}},
+	{{"MULTI"}, { ~0UL, 2}},
 };
 
 std::map<std::string, int>   UnknownItemCodes;
@@ -1479,8 +1484,8 @@ string NameVarAlvl(UnitItemInfo* uInfo)
 {
 	char alvl[4] = "0";
 	int alvl_int = GetAffixLevel(
-		uInfo->attrs->qualityLevel,
 		uInfo->item->pItemData->dwItemLevel,
+		uInfo->attrs->qualityLevel,
 		uInfo->attrs->magicLevel
 	);
 	sprintf_s(alvl, "%d", alvl_int);
@@ -1534,7 +1539,7 @@ string NameVarSellValue(UnitItemInfo* uInfo,
 
 string NameVarQty(UnitItemInfo* uInfo)
 {
-	char qty[4] = "0";
+	char qty[10] = "0";
 	sprintf_s(qty, "%d", D2COMMON_GetUnitStat(uInfo->item, STAT_AMMOQUANTITY, 0));
 	return qty;
 }
@@ -1772,7 +1777,8 @@ namespace ItemDisplay
 				r->action.borderColor != UNDEFINED_COLOR ||
 				r->action.dotColor != UNDEFINED_COLOR ||
 				r->action.pxColor != UNDEFINED_COLOR ||
-				r->action.lineColor != UNDEFINED_COLOR) {
+				r->action.lineColor != UNDEFINED_COLOR ||
+				r->action.soundID != 0) {
 				MapRuleList.push_back(r);
 			}
 			else if (r->action.name.length() == 0) { IgnoreRuleList.push_back(r); }
@@ -1973,6 +1979,7 @@ void BuildAction(string* str,
 	act->notifyColor = ParseMapColor(act, "NOTIFY");
 	act->pingLevel = ParsePingLevel(act, "TIER");
 	act->description = ParseDescription(act);
+	act->soundID = ParseSoundID(act, "SOUNDID");
 
 	// legacy support:
 	size_t map = act->name.find("%MAP%");
@@ -2020,6 +2027,33 @@ int ParsePingLevel(Action* act, const string& key_string) {
 			the_match[0].length(), "");
 	}
 	return ping_level;
+}
+
+// ParseSoundID
+// Returns an int ranging from 0 to the MAX_SOUND_ID.
+// If the parsed soundID is not found in that range, this will return a 0.
+int ParseSoundID(Action* act, const string& key_string) {
+	std::regex pattern("%" + key_string + "-([0-9]{1,4})%",
+		std::regex_constants::ECMAScript | std::regex_constants::icase);
+	// Default soundID should be 0 incase this is played.
+	// 0 is none.wav
+	int soundID = 0;
+	std::smatch the_match;
+
+	if (std::regex_search(act->name, the_match, pattern)) {
+		int matchedSoundID = stoi(the_match[1].str());
+		act->name.replace(
+			the_match.prefix().length(),
+			the_match[0].length(), "");
+
+		// Do our best to ensure the soundID is valid.
+		// Ensure soundID is in the range of 0 and MAX_SOUND_ID.
+		if (matchedSoundID < *p_D2CLIENT_SoundRecords) {
+			soundID = matchedSoundID;
+		}
+	}
+
+	return soundID;
 }
 
 string ParseDescription(Action* act)
@@ -3265,14 +3299,25 @@ bool ResistAllCondition::EvaluateInternal(UnitItemInfo* uInfo,
 
 void AddCondition::Init()
 {
+	static regex statRegex("([A-Z_]+)(?:(\\d{1,9})(?:,(\\d{1,9}))?)?", regex::ECMAScript);
 	codes.clear();
 	codes = split(key, '+');
 	for (auto code : codes)
 	{
-		for (int j = 0; j < sizeof(skills) / sizeof(skills[0]); j++)
-		{
-			if (code == skills[j].key)
-				stats.push_back(skills[j].value);
+		smatch match;
+		if (regex_search(code, match, statRegex)) {
+			if (skills.find(match[1]) == skills.end()) {
+				continue;
+			}
+			DWORD id = skills.find(match[1])->second.id;
+			DWORD params = skills.find(match[1])->second.params;
+			int paramCount = (match[2].length() != 0) + (match[3].length() != 0);
+			if (params != paramCount) {
+				continue;
+			}
+			int param1 = match[2].length() > 0 ? stoi(match[2].str()) : id;
+			int param2 = match[3].length() > 0 ? stoi(match[3].str()) : 0;
+			stats.emplace_back(param1, param2);
 		}
 	}
 }
@@ -3282,24 +3327,26 @@ bool AddCondition::EvaluateInternal(UnitItemInfo* uInfo,
 	Condition* arg2)
 {
 	int value = 0;
-	for (unsigned int i = 0; i < stats.size(); i++)
+	for (const auto& tuple : stats)
 	{
-		int tmpVal = D2COMMON_GetUnitStat(uInfo->item, stats[i], 0);
-		if (stats[i] == STAT_MAXHP || stats[i] == STAT_MAXMANA)
+		DWORD stat = get<0>(tuple);
+		DWORD layer = get<1>(tuple);
+		int tmpVal = D2COMMON_GetUnitStat(uInfo->item, stat, layer);
+		if (stat == STAT_MAXHP || stat == STAT_MAXMANA)
 		{
 			tmpVal /= 256;
 		}
 		else if (
-			stats[i] == STAT_ENHANCEDDEFENSE ||				// return 0
-			stats[i] == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
-			stats[i] == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
-			stats[i] == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
-			stats[i] == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
-			stats[i] == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
-			stats[i] == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
+			stat == STAT_ENHANCEDDEFENSE ||				// return 0
+			stat == STAT_ENHANCEDMAXIMUMDAMAGE ||		// return 0
+			stat == STAT_ENHANCEDMINIMUMDAMAGE ||		// return 0
+			stat == STAT_MINIMUMDAMAGE ||				// return base min 1h weapon damage
+			stat == STAT_MAXIMUMDAMAGE ||				// return base max 1h weapon damage
+			stat == STAT_SECONDARYMINIMUMDAMAGE ||		// return base min 2h weapon damage
+			stat == STAT_SECONDARYMAXIMUMDAMAGE			// return base max 2h weapon damage
 			)
 		{
-			tmpVal = GetStatFromList(uInfo, stats[i]);
+			tmpVal = GetStatFromList(uInfo, stat);
 		}
 		value += tmpVal;
 	}

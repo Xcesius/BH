@@ -782,7 +782,7 @@ public:
 private:
 	BYTE           operation;
 	vector<string> codes;
-	vector<DWORD>  stats;
+	vector<tuple<DWORD, DWORD>>  stats;
 	unsigned int   targetStat;
 	string         key;
 	void           Init();
@@ -806,12 +806,6 @@ struct ColorReplace
 	int    value;
 };
 
-struct SkillReplace
-{
-	string key;
-	int    value;
-};
-
 struct Action
 {
 	bool   stopProcessing;
@@ -824,6 +818,7 @@ struct Action
 	int    lineColor;
 	int    notifyColor;
 	int pingLevel;
+	int soundID; // Must range from 0 to MAX_SOUND_ID.
 
 	Action() :
 		colorOnMap(UNDEFINED_COLOR),
@@ -832,6 +827,7 @@ struct Action
 		pxColor(UNDEFINED_COLOR),
 		lineColor(UNDEFINED_COLOR),
 		notifyColor(UNDEFINED_COLOR),
+		soundID(0),
 		pingLevel(-1),
 		stopProcessing(true),
 		name(""),
@@ -942,6 +938,7 @@ namespace ItemDisplay
 void            BuildAction(string* str,
 	Action* act);
 int ParsePingLevel(Action* act, const string& reg_string);
+int ParseSoundID(Action* act, const string& reg_string);
 string ParseDescription(Action* act);
 int    ParseMapColor(Action* act,
 	const string& reg_string);

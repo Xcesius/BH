@@ -1051,7 +1051,8 @@ void Item::ProcessItemPacketFilterRules(UnitItemInfo* uInfo, px9c* pPacket)
 		else if (!showOnMap) {
 			for (vector<Rule*>::iterator it = RuleList.begin(); it != RuleList.end(); it++) {
 				if ((*it)->Evaluate(uInfo)) {
-					if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0) {
+					if ((*it)->action.name.length() == 0 && Item::GetFilterLevel() > 0)
+					{
 						uInfo->item->dwFlags2 |= UNITFLAGEX_INVISIBLE;
 					}
 					if ((*it)->action.stopProcessing) break;

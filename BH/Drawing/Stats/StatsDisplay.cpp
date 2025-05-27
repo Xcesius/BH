@@ -67,7 +67,7 @@ std::map<DWORD, std::set<int>> merc_attack_skills = {
 
 	{ MERC_A4, {  } },
 
-	{ MERC_A5, { 144 } },
+	{ MERC_A5, { 144, 425 } },
 };
 
 std::set<int> rollback_skills = {
@@ -83,7 +83,7 @@ std::map<DWORD, std::string> merc_skill_names = {
 
 	{ MERC_A4, "Holy Nova/Bone Spear" },
 
-	{ MERC_A5, "Concentrate/Bash" },
+	{ MERC_A5, "Concentrate/Whirlwind" },
 
 };
 
@@ -1022,6 +1022,18 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		{
 			std::set<int> vMercSkills = merc_attack_skills.at(pUnit->dwTxtFileNo);
 			pRightSkill = pUnit->pInfo->pFirstSkill;
+
+			if (pUnit->dwTxtFileNo == MERC_A5 &&
+				pRightSkill &&
+				pRightSkill->pSkillInfo &&
+				pRightSkill->pSkillInfo->wSkillId == 425 &&
+				pRightSkill->pNextSkill &&
+				pRightSkill->pNextSkill->pSkillInfo &&
+				pRightSkill->pNextSkill->pSkillInfo->wSkillId != 149)
+			{
+				pRightSkill = pRightSkill->pNextSkill;
+			}
+
 			while (pRightSkill && pRightSkill->pSkillInfo && vMercSkills.find(pRightSkill->pSkillInfo->wSkillId) == vMercSkills.end())
 			{
 				pRightSkill = pRightSkill->pNextSkill;
@@ -1058,7 +1070,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		AnimDataRecord* pAnimData = NULL;
 
 		// Whirlwind has hardcoded frames
-		if (nSkillId == 151 || nSkillId == 380)
+		if (nSkillId == 151 || nSkillId == 380 || nSkillId == 425)
 		{
 			int WWNextHitDelay = pRightSkill->pSkillInfo->dwParam3;
 			if (D2COMMON_UnitCanDualWield(pUnit))
@@ -1377,7 +1389,7 @@ void StatsDisplay::GetIASBreakpointString(UnitAny* pUnit,
 		int nPreviousFrameBP = 0;
 		int nCurrentFrames = 0;
 
-		for (int i = nMinAnimAcceleration; i < nMaxAnimAcceleration; i++)
+		for (int i = nMinAnimAcceleration; i < nMaxAnimAcceleration + 1; i++)
 		{
 			nBaseIAS = (double)i - (double)nMinAnimAcceleration;
 			nIASBP = ceil((120 * nBaseIAS) / (120 - nBaseIAS));
