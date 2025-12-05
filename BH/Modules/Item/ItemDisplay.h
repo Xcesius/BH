@@ -390,6 +390,25 @@ private:
 		Condition* arg2);
 };
 
+class RerollLevelCondition : public Condition
+{
+public:
+	RerollLevelCondition(BYTE operation,
+		BYTE rerollLevel1,
+		BYTE rerollLevel2) : operation_(operation),
+		rerollLevel1_(rerollLevel1),
+		rerollLevel2_(rerollLevel2) {
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE operation_;
+	BYTE rerollLevel1_;
+	BYTE rerollLevel2_;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class AutomodCondition : public Condition
 {
 public:
@@ -564,41 +583,12 @@ private:
 		Condition* arg2);
 };
 
-class EquippedCondition : public Condition
-{
-public:
-	EquippedCondition() { conditionType = CT_Operand; };
-private:
-	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-};
-
 class LocationCondition : public Condition
 {
 public:
 	LocationCondition(unsigned int nLocation) : location(nLocation) { conditionType = CT_Operand; };
 private:
 	unsigned int location;
-	bool EvaluateInternal(UnitItemInfo* uInfo,
-		Condition* arg1,
-		Condition* arg2);
-};
-
-class RerollLevelCondition : public Condition
-{
-public:
-	RerollLevelCondition(BYTE operation,
-		BYTE rerollLevel1,
-		BYTE rerollLevel2) : operation_(operation),
-		rerollLevel1_(rerollLevel1),
-		rerollLevel2_(rerollLevel2) {
-		conditionType = CT_Operand;
-	};
-private:
-	BYTE operation_;
-	BYTE rerollLevel1_;
-	BYTE rerollLevel2_;
 	bool EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -768,7 +758,7 @@ public:
 		: operation(op),
 		targetStat(target),
 		targetStat2(target2),
-		nTransactionType(transactionType) {
+		nTransactionType(transactionType){
 		conditionType = CT_Operand;
 	};
 private:
@@ -994,12 +984,12 @@ string NameVarGemType(UnitItemInfo* uInfo);
 string NameVarIlvl(UnitItemInfo* uInfo);
 string NameVarAlvl(UnitItemInfo* uInfo);
 string NameVarCraftAlvl(UnitItemInfo* uInfo);
+string NameVarRerollAlvl(UnitItemInfo* uInfo);
 string NameVarLevelReq(UnitItemInfo* uInfo);
 string NameVarWeaponSpeed(ItemsTxt* itemTxt);
 string NameVarRangeAdder(ItemsTxt* itemTxt);
-string NameVarSellValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
 string NameVarBuyValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
-string NameVarRerollAlvl(UnitItemInfo* uInfo);
+string NameVarSellValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
 string NameVarQty(UnitItemInfo* uInfo);
 string NameVarAllRes(UnitItemInfo* uInfo);
 string NameVarEd(UnitItemInfo* uInfo);
@@ -1010,5 +1000,4 @@ BYTE GetAffixLevel(BYTE ilvl,
 BYTE GetRequiredLevel(UnitAny* item);
 BYTE RuneNumberFromItemCode(char* code);
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat);
-int GetShopPrice(UnitAny* pPlayer, UnitAny* pItem, int nTransactionType);
 BYTE ComputeRerollAffixLevel(UnitItemInfo* uInfo);

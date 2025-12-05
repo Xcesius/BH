@@ -109,7 +109,6 @@ FUNCPTR(D2CLIENT, GetCurrentInteractingNPC, UnitAny* __fastcall, (void), 0x46150
 FUNCPTR(D2CLIENT, GetSelectedUnit, UnitAny* __stdcall, (void), 0x51A80, 0x17280)
 FUNCPTR(D2CLIENT, GetCursorItem, UnitAny* __fastcall, (void), 0x16020, 0x144A0)
 FUNCPTR(D2CLIENT, GetMercUnit, UnitAny* __fastcall, (void), 0x97CD0, 0x9C0A0)
-FUNCPTR(D2CLIENT, ItemPacketBuildAction3_OldGround, void __stdcall, (px9c* pPacket), 0x86810)
 // FUNCPTR(D2CLIENT, UnitTestSelect, DWORD __stdcall, (UnitAny* pUnit, DWORD _1, DWORD _2, DWORD _3), 0x8D030) // unused but we need to use it
 
 FUNCPTR(D2CLIENT, SetSelectedUnit_I, void __fastcall, (UnitAny* pUnit), 0x51860, 0x17060)
@@ -334,6 +333,7 @@ ASMPTR(D2WIN, DrawTextBuffer, 0x12940, 0x134D0)
 
 ASMPTR(D2CLIENT, ParseStats_J, 0x54E10, 0x2CE40)
 ASMPTR(D2CLIENT, GetItemPropertiesString, 0x55B20);
+FUNCPTR(D2CLIENT, ItemPacketBuildAction3_OldGround, void __stdcall, (px9c* pPacket), 0x86810)
 ASMPTR(D2CLIENT, ItemPacketBuildAction0_NewGround, 0x84BB0);
 ASMPTR(D2CLIENT, ItemPacketBuildAction2_DropToGround, 0x84990);
 ASMPTR(D2CLIENT, ItemPacketBuildAction4_PutInContainer, 0x84750);
@@ -376,7 +376,7 @@ FUNCPTR(D2COMMON, GetTargetUnitType, Path* __stdcall, (Path* pPath), -10392, -10
 FUNCPTR(D2COMMON, GetSkillLevel, int __stdcall, (UnitAny* pUnit, Skill* pSkill, BOOL bTotal), -10306, -10007)
 
 FUNCPTR(D2COMMON, GetItemLevelRequirement, DWORD __stdcall, (UnitAny* pItem, UnitAny* pPlayer), -11015, -10929)
-FUNCPTR(D2COMMON, GetItemPrice, DWORD __stdcall, (UnitAny* MyUnit, UnitAny* pItem, DWORD U1_, DWORD U2_, DWORD U3_, DWORD U4_), -10107, -10186)
+FUNCPTR(D2COMMON, GetItemPrice, DWORD __stdcall, (UnitAny* pPlayer, UnitAny* pItem, DWORD nDifficulty, DWORD pQuestInfo, DWORD nVendorId, DWORD nTransactionType), -10107, -10186)
 FUNCPTR(D2COMMON, GetRepairCost, DWORD __stdcall, (DWORD _1, UnitAny* pUnit, DWORD dwNpcId, DWORD dwDifficulty, DWORD dwItemPriceList, DWORD _2), -10071, -10807)
 FUNCPTR(D2COMMON, GetItemMagicalMods, AutoMagicTxt* __stdcall, (int wPrefixNum), -10248, -10174)
 FUNCPTR(D2COMMON, GetItemFromInventory, UnitAny* __stdcall, (Inventory* inv), -10460, -11132)
