@@ -41,8 +41,9 @@ namespace BH
 
 	void LoadLootFilter();
 	void CheckForD2GL();
+	void CheckForPD2();
 };
-
+typedef BOOL(__stdcall* pd2PlaySoundImpl_t)(UnitAny* pUnit, int nSound, int nVolume, int nPriority, BOOL bDropSound);
 struct BHApp
 {
 
@@ -180,6 +181,11 @@ struct BHApp
 		SettingsBool usingD2GL = { false, false };
 		SettingsBool usingHDText = { false, false };
 	} d2gl;
+
+	struct
+	{
+		pd2PlaySoundImpl_t pd2PlaySoundImpl = NULL;
+	} pd2;
 
 	std::vector<Toggle*> hotkeyToggles;
 };

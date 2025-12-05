@@ -574,6 +574,36 @@ private:
 		Condition* arg2);
 };
 
+class LocationCondition : public Condition
+{
+public:
+	LocationCondition(unsigned int nLocation) : location(nLocation) { conditionType = CT_Operand; };
+private:
+	unsigned int location;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
+class RerollLevelCondition : public Condition
+{
+public:
+	RerollLevelCondition(BYTE operation,
+		BYTE rerollLevel1,
+		BYTE rerollLevel2) : operation_(operation),
+		rerollLevel1_(rerollLevel1),
+		rerollLevel2_(rerollLevel2) {
+		conditionType = CT_Operand;
+	};
+private:
+	BYTE operation_;
+	BYTE rerollLevel1_;
+	BYTE rerollLevel2_;
+	bool EvaluateInternal(UnitItemInfo* uInfo,
+		Condition* arg1,
+		Condition* arg2);
+};
+
 class ShopCondition : public Condition
 {
 public:
@@ -733,16 +763,19 @@ class ItemPriceCondition : public Condition
 public:
 	ItemPriceCondition(BYTE op,
 		unsigned int target,
-		unsigned int target2)
+		unsigned int target2,
+		unsigned int transactionType)
 		: operation(op),
 		targetStat(target),
-		targetStat2(target2) {
+		targetStat2(target2),
+		nTransactionType(transactionType) {
 		conditionType = CT_Operand;
 	};
 private:
 	BYTE         operation;
 	unsigned int targetStat;
 	unsigned int targetStat2;
+	unsigned int nTransactionType;
 	bool         EvaluateInternal(UnitItemInfo* uInfo,
 		Condition* arg1,
 		Condition* arg2);
@@ -965,6 +998,8 @@ string NameVarLevelReq(UnitItemInfo* uInfo);
 string NameVarWeaponSpeed(ItemsTxt* itemTxt);
 string NameVarRangeAdder(ItemsTxt* itemTxt);
 string NameVarSellValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
+string NameVarBuyValue(UnitItemInfo* uInfo, ItemsTxt* itemTxt);
+string NameVarRerollAlvl(UnitItemInfo* uInfo);
 string NameVarQty(UnitItemInfo* uInfo);
 string NameVarAllRes(UnitItemInfo* uInfo);
 string NameVarEd(UnitItemInfo* uInfo);
@@ -975,3 +1010,5 @@ BYTE GetAffixLevel(BYTE ilvl,
 BYTE GetRequiredLevel(UnitAny* item);
 BYTE RuneNumberFromItemCode(char* code);
 int GetStatFromList(UnitItemInfo* uInfo, int itemStat);
+int GetShopPrice(UnitAny* pPlayer, UnitAny* pItem, int nTransactionType);
+BYTE ComputeRerollAffixLevel(UnitItemInfo* uInfo);
