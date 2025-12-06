@@ -1505,6 +1505,7 @@ enum TransactionTypes
 #define ITEM_TYPE_PVP_MAP_MOOR		199
 #define ITEM_TYPE_T5_MAP			211
 #define ITEM_TYPE_PVP_MAP_DESERT	227
+#define ITEM_TYPE_CARD				232
 
 enum MinAccrIndex
 {
